@@ -15,35 +15,58 @@ namespace PictureServiceWebRole
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
     public class PictureService : IPictureService
     {
+        private CloudStorageAccount storageAccount;
+        private CloudBlobClient blobClient;
+        private CloudBlobContainer blobContainer;
+        private const string ContainerName = "testcontainer";
+
+
         public PictureService()
         {
-            //First create the Container for this service
-            CloudStorageAccount account = CloudStorageAccount.Parse(RoleEnvironment.GetConfigurationSettingValue("StorageConnectionString"));
-            CloudBlobClient client = account.CreateCloudBlobClient();
-            CloudBlobContainer container = client.GetContainerReference("testcontainer");
-            container.CreateIfNotExist();
-            container.SetPermissions(new BlobContainerPermissions() { PublicAccess = BlobContainerPublicAccessType.Blob });
+            //Create connection to blob storage
+            ConnectToBlobStorage();
+        }
 
-            //now create the Blob   
-            CloudBlob blob = container.GetBlobReference("TestBlob");
 
-            using (var fileStream = System.IO.File.OpenRead("C:\\Temp\\test.txt")) 
+        /// <summary>
+        /// Connects to the storage account and creates the default container 
+        /// </summary>
+        private void ConnectToBlobStorage()
+        {
+            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(RoleEnvironment.GetConfigurationSettingValue("StorageConnectionString"));
+            CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+            CloudBlobContainer blobContainer = blobClient.GetContainerReference("testcontainer");
+            blobContainer.CreateIfNotExist();
+            blobContainer.SetPermissions(new BlobContainerPermissions() { PublicAccess = BlobContainerPublicAccessType.Blob });
+        }
+
+
+        private void TempFunction()
+        {
+            // This function currently just uploads the blob however 
+            // I need to refactor this into a proper function.
+            CloudBlob blob = blobContainer.GetBlobReference("TestBlob");
+
+            using (var fileStream = System.IO.File.OpenRead("C:\\Temp\\test.txt"))
             {
                 blob.UploadFromStream(fileStream);
             }
-
         }
-
 
 
         public Picture GetPicture(string name)
         {
-            throw new NotImplementedException();
+            CloudBlob blob = blobContainer.GetBlobReference(name);
+            Picture retVal = new Picture();
+            retVal.Name = name;
+            retVal.PictureStream = blob.DownloadByteArray();
+            return retVal;
         }
 
         public void UploadPicture(Picture picture)
         {
-            throw new NotImplementedException();
+            CloudBlob blob = blobContainer.GetBlobReference(picture.Name);
+            blob.UploadByteArray(picture.PictureStream);
         }
     }
 }
