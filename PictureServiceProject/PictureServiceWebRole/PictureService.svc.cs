@@ -11,7 +11,7 @@ using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace PictureServiceWebRole
 {
-    // NOTE: You can use the "Rename" command on the "Refactor" menu to change the class name "Service1" in code, svc and config file together.
+    
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
     public class PictureService : IPictureService
     {
@@ -33,9 +33,9 @@ namespace PictureServiceWebRole
         /// </summary>
         private void ConnectToBlobStorage()
         {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(RoleEnvironment.GetConfigurationSettingValue("StorageConnectionString"));
-            CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-            CloudBlobContainer blobContainer = blobClient.GetContainerReference("testcontainer");
+            storageAccount = CloudStorageAccount.Parse(RoleEnvironment.GetConfigurationSettingValue("StorageConnectionString"));
+            blobClient = storageAccount.CreateCloudBlobClient();
+            blobContainer = blobClient.GetContainerReference("testcontainer");
             blobContainer.CreateIfNotExist();
             blobContainer.SetPermissions(new BlobContainerPermissions() { PublicAccess = BlobContainerPublicAccessType.Blob });
         }
